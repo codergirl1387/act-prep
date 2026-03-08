@@ -40,6 +40,18 @@ export async function recordCardReview(cardId: number, result: 'easy' | 'hard' |
   });
 }
 
+export async function getRecentCardFronts(section: Section, days: number): Promise<string[]> {
+  const db = getDb();
+  const result = await db.execute({
+    sql: `SELECT front FROM study_cards
+          WHERE topic = ?
+            AND generated_date >= date('now', ? || ' days')
+          ORDER BY created_at DESC`,
+    args: [section, `-${days}`],
+  });
+  return result.rows.map((r) => (r as Record<string, unknown>).front as string);
+}
+
 export async function getTodayReviewedCount(date: string): Promise<number> {
   const db = getDb();
   const result = await db.execute({

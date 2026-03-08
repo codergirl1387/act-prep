@@ -300,7 +300,7 @@ Return ONLY a valid JSON object:
 }
 
 // ─── FLASHCARD PROMPTS ────────────────────────────────────────────────────────
-export function buildFlashcardPrompt(section: Section, count: number): string {
+export function buildFlashcardPrompt(section: Section, count: number, recentFronts: string[] = []): string {
   const sectionGuides: Record<Section, string> = {
     english: `Focus on HARD ACT English concepts that trip up even well-prepared students. Topics include:
 - Subtle modifier errors: dangling participial phrases, misplaced adverbs, squinting modifiers
@@ -344,9 +344,14 @@ Example front: "How do you approach a 'new evidence' question in Conflicting Vie
 Example back: "Step 1: Identify the core claim of each viewpoint — what mechanism or cause does each scientist propose? Step 2: Determine what each hypothesis PREDICTS about the new evidence. Step 3: The new finding supports the hypothesis that predicted it and weakens the hypothesis that predicted the opposite. Watch out: evidence that's consistent with both viewpoints supports neither uniquely. Evidence that's impossible under one viewpoint is the strongest weapon against it."`,
   };
 
+  const avoidBlock = recentFronts.length > 0
+    ? `\nDo NOT repeat or closely paraphrase any of the following topics that were recently covered:\n${recentFronts.map((f, i) => `${i + 1}. ${f}`).join('\n')}\n\nChoose entirely different concepts, rules, or question types from the ones listed above.`
+    : '';
+
   return `You are an expert ACT tutor creating HARD flashcards for the ${SECTION_LABELS[section]} section.
 
 ${sectionGuides[section]}
+${avoidBlock}
 
 Generate ${count} high-quality flashcard(s) targeting genuinely difficult concepts — not basic facts students already know. Each card should address a specific error pattern, a nuanced rule with important exceptions, or a multi-step strategy. The back should include a worked example.
 

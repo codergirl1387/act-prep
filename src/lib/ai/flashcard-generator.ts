@@ -2,7 +2,7 @@ import { Section, StudyCard } from '@/types';
 import { anthropic } from './client';
 import { buildFlashcardPrompt } from './prompts';
 import { getTopicWeights, sampleTopicsByWeight } from '@/lib/utils/adaptive-weights';
-import { insertCards, getTodayCards } from '@/lib/db/queries/flashcards';
+import { insertCards, getTodayCards, getRecentCardFronts } from '@/lib/db/queries/flashcards';
 import { todayString } from '@/lib/utils/date';
 import { DAILY_FLASHCARD_COUNT } from '@/lib/utils/sections';
 
@@ -11,8 +11,8 @@ interface RawCard {
   back: string;
 }
 
-async function generateCardsForSection(section: Section, count: number): Promise<RawCard[]> {
-  const prompt = buildFlashcardPrompt(section, count);
+async function generateCardsForSection(section: Section, count: number, recentFronts: string[]): Promise<RawCard[]> {
+  const prompt = buildFlashcardPrompt(section, count, recentFronts);
   const message = await anthropic.messages.create({
     model: 'claude-opus-4-6',
     max_tokens: 2000,
@@ -46,7 +46,8 @@ export async function generateDailyFlashcards(date?: string): Promise<StudyCard[
 
   const allCards: Omit<StudyCard, 'id' | 'createdAt'>[] = [];
   for (const [section, count] of sectionCounts) {
-    const rawCards = await generateCardsForSection(section, count);
+    const recentFronts = await getRecentCardFronts(section, 30);
+    const rawCards = await generateCardsForSection(section, count, recentFronts);
     for (const card of rawCards) {
       allCards.push({
         topic: section,
