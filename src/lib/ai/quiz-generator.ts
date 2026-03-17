@@ -6,7 +6,7 @@ import {
   buildReadingQuizPrompt,
   buildScienceQuizPrompt,
 } from './prompts';
-import { insertQuestion } from '@/lib/db/queries/questions';
+import { insertQuestion, linkQuestionsToSession } from '@/lib/db/queries/questions';
 import { createSession, getTodayQuizSession } from '@/lib/db/queries/sessions';
 import { QUIZ_SECTION_DISTRIBUTION, QUIZ_TIME_SECONDS } from '@/lib/utils/sections';
 
@@ -120,9 +120,6 @@ async function generatePassageQuestions(
 }
 
 export async function generateDailyQuiz(): Promise<{ sessionId: number; questions: Question[] }> {
-  const existing = await getTodayQuizSession();
-  if (existing) return { sessionId: existing.id, questions: [] };
-
   const distribution = QUIZ_SECTION_DISTRIBUTION;
   const allQuestions: Question[] = [];
 
@@ -150,5 +147,6 @@ export async function generateDailyQuiz(): Promise<{ sessionId: number; question
   }
 
   const sessionId = await createSession('quiz', QUIZ_TIME_SECONDS);
+  await linkQuestionsToSession(sessionId, allQuestions.map((q) => q.id));
   return { sessionId, questions: allQuestions };
 }

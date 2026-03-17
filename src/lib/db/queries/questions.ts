@@ -100,6 +100,27 @@ export async function insertQuestion(q: Omit<Question, 'id' | 'createdAt'>): Pro
   return Number(result.lastInsertRowid);
 }
 
+export async function linkQuestionsToSession(sessionId: number, questionIds: number[]): Promise<void> {
+  const db = getDb();
+  for (const questionId of questionIds) {
+    await db.execute({
+      sql: 'INSERT OR IGNORE INTO session_questions (session_id, question_id) VALUES (?, ?)',
+      args: [sessionId, questionId],
+    });
+  }
+}
+
+export async function getQuestionsForSession(sessionId: number): Promise<Question[]> {
+  const db = getDb();
+  const result = await db.execute({
+    sql: `SELECT q.* FROM questions q
+          JOIN session_questions sq ON q.id = sq.question_id
+          WHERE sq.session_id = ?`,
+    args: [sessionId],
+  });
+  return result.rows.map((r) => rowToQuestion(r as Record<string, unknown>));
+}
+
 export async function updateQuestionExplanation(id: number, explanation: string): Promise<void> {
   const db = getDb();
   await db.execute({ sql: 'UPDATE questions SET explanation = ? WHERE id = ?', args: [explanation, id] });

@@ -68,8 +68,14 @@ export async function runMigrations() {
       weight REAL NOT NULL DEFAULT 0.25,
       last_updated DATETIME DEFAULT CURRENT_TIMESTAMP
     )`,
+    `CREATE TABLE IF NOT EXISTS session_questions (
+      session_id INTEGER NOT NULL REFERENCES exam_sessions(id),
+      question_id INTEGER NOT NULL REFERENCES questions(id),
+      PRIMARY KEY (session_id, question_id)
+    )`,
     `CREATE INDEX IF NOT EXISTS idx_questions_topic ON questions(topic)`,
     `CREATE INDEX IF NOT EXISTS idx_session_answers_session ON session_answers(session_id)`,
+    `CREATE INDEX IF NOT EXISTS idx_session_questions_session ON session_questions(session_id)`,
     `CREATE INDEX IF NOT EXISTS idx_performance_topic_date ON performance_records(topic, date)`,
     `CREATE INDEX IF NOT EXISTS idx_study_cards_date ON study_cards(generated_date)`,
   ], 'deferred');

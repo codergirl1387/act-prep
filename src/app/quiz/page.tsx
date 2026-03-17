@@ -26,7 +26,12 @@ export default function QuizPage() {
   useEffect(() => {
     fetch('/api/quiz/today')
       .then((r) => r.json())
-      .then((data: QuizResponse) => {
+      .then((data: QuizResponse & { error?: string }) => {
+        if (data.error) {
+          setError(data.error);
+          setLoading(false);
+          return;
+        }
         if (data.completed) {
           router.push('/quiz/results?score=' + data.score);
           return;
