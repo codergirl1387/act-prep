@@ -7,7 +7,7 @@ import {
   buildScienceQuizPrompt,
 } from './prompts';
 import { insertQuestion, linkQuestionsToSession } from '@/lib/db/queries/questions';
-import { createSession, getTodayQuizSession } from '@/lib/db/queries/sessions';
+import { createSession } from '@/lib/db/queries/sessions';
 import { QUIZ_SECTION_DISTRIBUTION, QUIZ_TIME_SECONDS } from '@/lib/utils/sections';
 
 interface RawQuestion {
@@ -121,24 +121,15 @@ async function generatePassageQuestions(
 
 export async function generateDailyQuiz(): Promise<{ sessionId: number; questions: Question[] }> {
   const distribution = QUIZ_SECTION_DISTRIBUTION;
-  const allQuestions: Question[] = [];
 
-  if (distribution.english > 0) {
-    const q = await generateSimpleQuestions('english', distribution.english);
-    allQuestions.push(...q);
-  }
-  if (distribution.math > 0) {
-    const q = await generateSimpleQuestions('math', distribution.math);
-    allQuestions.push(...q);
-  }
-  if (distribution.reading > 0) {
-    const q = await generatePassageQuestions('reading', distribution.reading);
-    allQuestions.push(...q);
-  }
-  if (distribution.science > 0) {
-    const q = await generatePassageQuestions('science', distribution.science);
-    allQuestions.push(...q);
-  }
+  const [englishQs, mathQs, readingQs, scienceQs] = await Promise.all([
+    distribution.english > 0 ? generateSimpleQuestions('english', distribution.english) : Promise.resolve([]),
+    distribution.math > 0 ? generateSimpleQuestions('math', distribution.math) : Promise.resolve([]),
+    distribution.reading > 0 ? generatePassageQuestions('reading', distribution.reading) : Promise.resolve([]),
+    distribution.science > 0 ? generatePassageQuestions('science', distribution.science) : Promise.resolve([]),
+  ]);
+
+  const allQuestions = [...englishQs, ...mathQs, ...readingQs, ...scienceQs];
 
   // Shuffle
   for (let i = allQuestions.length - 1; i > 0; i--) {
