@@ -23,10 +23,17 @@ function QuizResultsContent() {
   const [showReview, setShowReview] = useState(false);
 
   useEffect(() => {
-    if (sessionId) {
-      const stored = sessionStorage.getItem(`quiz-${sessionId}-results`);
-      if (stored) setResults(JSON.parse(stored));
+    if (!sessionId) return;
+    const stored = sessionStorage.getItem(`quiz-${sessionId}-results`);
+    if (stored) {
+      setResults(JSON.parse(stored));
+      return;
     }
+    // Fallback: fetch from API (e.g. after page refresh or redirect)
+    fetch(`/api/quiz/results?sessionId=${sessionId}`)
+      .then((r) => r.json())
+      .then((data) => { if (!data.error) setResults(data); })
+      .catch(() => {});
   }, [sessionId]);
 
   if (!results) {

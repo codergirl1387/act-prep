@@ -33,7 +33,7 @@ export default function QuizPage() {
           return;
         }
         if (data.completed) {
-          router.push('/quiz/results?score=' + data.score);
+          router.push('/quiz/results?sessionId=' + data.sessionId);
           return;
         }
         setQuizData(data);
