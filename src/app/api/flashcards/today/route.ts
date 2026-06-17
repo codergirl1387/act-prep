@@ -9,6 +9,6 @@ export async function GET() {
     return NextResponse.json({ cards });
   } catch (err) {
     console.error('[Flashcards] Error generating daily cards:', err);
-    return NextResponse.json({ error: String(err) }, { status: 500 });
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

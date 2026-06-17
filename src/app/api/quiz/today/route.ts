@@ -30,6 +30,6 @@ export async function GET() {
     return NextResponse.json({ sessionId, questions, completed: false });
   } catch (err) {
     console.error('[Quiz] Error generating daily quiz:', err);
-    return NextResponse.json({ error: String(err) }, { status: 500 });
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

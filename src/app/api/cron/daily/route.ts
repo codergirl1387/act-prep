@@ -1,4 +1,4 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { generateDailyFlashcards } from '@/lib/ai/flashcard-generator';
 import { generateDailyQuiz } from '@/lib/ai/quiz-generator';
 import { sendFlashcardsEmail } from '@/lib/email/mailer';
@@ -7,7 +7,11 @@ import { todayString } from '@/lib/utils/date';
 import { ensureMigrated } from '@/lib/db';
 
 // Vercel invokes this at 11:00 UTC (6:00 AM EST) every day via vercel.json cron config
-export async function GET() {
+export async function GET(req: NextRequest) {
+  if (req.headers.get('authorization') !== `Bearer ${process.env.CRON_SECRET}`) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
   try {
     await ensureMigrated();
     console.log('[Cron/Daily] Starting daily content generation...');
@@ -30,6 +34,6 @@ export async function GET() {
     }
   } catch (err) {
     console.error('[Cron/Daily] Failed:', err);
-    return NextResponse.json({ error: String(err) }, { status: 500 });
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

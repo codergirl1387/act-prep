@@ -1,8 +1,12 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import nodemailer from 'nodemailer';
 
 // Vercel invokes this at 19:40 UTC (2:40 PM EST) every day via vercel.json cron config
-export async function GET() {
+export async function GET(req: NextRequest) {
+  if (req.headers.get('authorization') !== `Bearer ${process.env.CRON_SECRET}`) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
   const recipient = process.env.RECIPIENT_EMAIL;
   if (!recipient) {
     return NextResponse.json({ error: 'No RECIPIENT_EMAIL set' }, { status: 400 });
@@ -52,6 +56,6 @@ export async function GET() {
     return NextResponse.json({ ok: true });
   } catch (err) {
     console.error('[Cron/Reminder] Failed:', err);
-    return NextResponse.json({ error: String(err) }, { status: 500 });
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
